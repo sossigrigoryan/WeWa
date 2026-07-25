@@ -1,10 +1,19 @@
 import env from './src/config/env.js';
 import logger from './src/common/logger.js';
+import { createBot } from './src/bot/create-bot.js';
 
 async function main() {
   logger.info('Configuration loaded successfully');
   logger.info(`Environment: ${env.NODE_ENV}`);
   logger.info('Application ready');
+  
+  const bot = createBot();
+  
+  process.once('SIGINT', () => bot.stop());
+  process.once('SIGTERM', () => bot.stop());
+  
+  logger.info('Starting bot...');
+  await bot.start();
 }
 
 process.on('unhandledRejection', (reason) => {
