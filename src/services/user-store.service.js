@@ -1,31 +1,29 @@
-const users = new Map();
+import { findByTelegramId, getLanguage, upsertLanguage } from '../repositories/user.repository.js';
 
 /**
  * Gets user data by ID.
  * @param {number} userId
- * @returns {object | undefined}
+ * @returns {Promise<object | null>}
  */
-export function getUser(userId) {
-  return users.get(userId);
+export async function getUser(userId) {
+  return findByTelegramId(userId);
 }
 
 /**
  * Sets user language.
  * @param {number} userId
  * @param {string} language
+ * @returns {Promise<void>}
  */
-export function setUserLanguage(userId, language) {
-  const user = users.get(userId) || {};
-  user.language = language;
-  users.set(userId, user);
+export async function setUserLanguage(userId, language) {
+  await upsertLanguage(userId, language);
 }
 
 /**
  * Gets user language.
  * @param {number} userId
- * @returns {string | undefined}
+ * @returns {Promise<string | null>}
  */
-export function getUserLanguage(userId) {
-  const user = users.get(userId);
-  return user?.language;
+export async function getUserLanguage(userId) {
+  return getLanguage(userId);
 }
