@@ -7,7 +7,12 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   DATABASE_URL: z.string().min(1),
-  OPENAI_API_KEY: z.string().optional().transform((val) => val && val.trim() ? val : undefined),
+  GITHUB_TOKEN: z.string().optional().transform((val) => val && val.trim() ? val : undefined),
+  GITHUB_MODEL: z.string().min(1).default('openai/gpt-4.1'),
+  GITHUB_MODELS_ENDPOINT: z
+  .string()
+  .min(1)
+  .default('https://models.github.ai/inference'),
   ADMIN_TELEGRAM_ID: z.string().optional().transform((val) => val && val.trim() ? val : undefined).refine((val) => !val || /^\d+$/.test(val), {
     message: 'ADMIN_TELEGRAM_ID must contain only digits',
   }),
