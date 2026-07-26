@@ -29,3 +29,11 @@ export const AI_ANALYSIS_STATUS = Object.freeze({
  * Allowed AI status values
  */
 export const AI_STATUS_VALUES = Object.values(AI_ANALYSIS_STATUS);
+
+/**
+ * Rate limiting defaults for Telegram updates
+ */
+export const RATE_LIMIT_MAX_REQUESTS = 10;
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+export const RATE_LIMIT_BLOCK_DURATION_MS = 60_000;
+export const RATE_LIMIT_WARNING_MESSAGE = 'You are sending messages too quickly. Please wait a moment.';
