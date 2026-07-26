@@ -10,7 +10,7 @@ import { showMainMenu } from '../../services/menu.service.js';
 export function registerStartHandler(bot) {
   bot.command('start', async (ctx) => {
     const userId = ctx.from.id;
-    const userLanguage = getUserLanguage(userId);
+    const userLanguage = await getUserLanguage(userId);
     
     if (userLanguage) {
       const locale = getLocale(userLanguage);

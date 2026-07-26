@@ -4,3 +4,5 @@ logs
 coverage
 uploads/*
 !uploads/.gitkeep
+*.db
+*.db-journal

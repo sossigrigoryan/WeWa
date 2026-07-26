@@ -9,7 +9,7 @@ import { showMainMenu } from './menu.service.js';
  */
 export async function handleLanguageSelection(ctx, languageCode) {
   const userId = ctx.from.id;
-  setUserLanguage(userId, languageCode);
+  await setUserLanguage(userId, languageCode);
   const locale = getLocale(languageCode);
   await ctx.reply(locale.languageSelected, { reply_markup: { remove_keyboard: true } });
   await showMainMenu(ctx, locale);
