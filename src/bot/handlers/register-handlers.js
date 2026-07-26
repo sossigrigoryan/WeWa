@@ -1,5 +1,6 @@
 import { registerStartHandler } from './start.handler.js';
 import { registerLanguageHandler } from './language.handler.js';
+import { registerWardrobeHandler } from './wardrobe.handler.js';
 
 /**
  * Registers all bot handlers.
@@ -8,4 +9,5 @@ import { registerLanguageHandler } from './language.handler.js';
 export function registerHandlers(bot) {
   registerStartHandler(bot);
   registerLanguageHandler(bot);
+  registerWardrobeHandler(bot);
 }
