@@ -1,5 +1,6 @@
 import { registerStartHandler } from './start.handler.js';
 import { registerLanguageHandler } from './language.handler.js';
+import { registerMenuHandler } from './menu.handler.js';
 import { registerWardrobeHandler } from './wardrobe.handler.js';
 import { rateLimitMiddleware } from '../../middlewares/rate-limit.middleware.js';
 
@@ -12,5 +13,6 @@ export function registerHandlers(bot) {
 
   registerStartHandler(bot);
   registerLanguageHandler(bot);
+  registerMenuHandler(bot);
   registerWardrobeHandler(bot);
 }

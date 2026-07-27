@@ -2,6 +2,7 @@ export const hy = {
   welcome: 'Բարի գալուստ WeWa!',
   chooseLanguage: 'Խնդրում ենք ընտրել ձեր լեզուն:',
   languageSelected: 'Լեզուն ընտրված է:',
+  wewa: 'WeWa',
   wardrobe: 'Հագուստապահարան',
   outfits: 'Հագուստներ',
   settings: 'Կարգավորումներ',
