@@ -1,5 +1,6 @@
 import logger from '../../common/logger.js';
-import { Keyboard } from 'grammy';
+import { Keyboard, InputFile } from 'grammy';
+import fs from 'fs';
 import { addItem, getWardrobe } from '../../modules/wardrobe/wardrobe.service.js';
 import { getUserLanguage } from '../../services/user-store.service.js';
 import { getLocale } from '../../locales/index.js';
@@ -99,10 +100,45 @@ export function formatWardrobeItemMessage(item = {}) {
   ].join('\n');
 }
 
-async function sendWardrobeItem(ctx, item) {
-  const photoSource = item.telegramFileId || item.imagePath;
-  await safeReplyWithPhoto(ctx, photoSource);
-  await safeReply(ctx, formatWardrobeItemMessage(item));
+function localFileExists(filePath) {
+  try {
+    return Boolean(filePath) && fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+}
+
+export async function sendWardrobeItem(ctx, item) {
+  const caption = formatWardrobeItemMessage(item);
+
+  // 1) Try the cached Telegram file_id first (fastest, no upload needed).
+  //    Note: file_id values are only valid for the bot that received them,
+  //    so items migrated from a different bot will fail here.
+  if (item.telegramFileId) {
+    try {
+      await ctx.replyWithPhoto(item.telegramFileId, { caption });
+      return;
+    } catch (error) {
+      logger.warn(
+        { err: error, itemId: item.id },
+        'telegramFileId invalid for this bot, falling back to local image'
+      );
+    }
+  }
+
+  // 2) Fall back to the locally saved copy of the photo (downloaded when the
+  //    item was added). Local files must be wrapped in InputFile.
+  if (localFileExists(item.imagePath)) {
+    try {
+      await ctx.replyWithPhoto(new InputFile(item.imagePath), { caption });
+      return;
+    } catch (error) {
+      logger.warn({ err: error, itemId: item.id }, 'Failed to send local image file');
+    }
+  }
+
+  // 3) Last resort: text only.
+  await safeReply(ctx, caption);
 }
 
 export function registerWardrobeHandler(bot) {

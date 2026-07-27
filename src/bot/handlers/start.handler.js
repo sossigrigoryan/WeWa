@@ -15,8 +15,6 @@ export function registerStartHandler(bot) {
 
       if (userLanguage) {
         const locale = getLocale(userLanguage);
-        // Remove old keyboard first to ensure replacement
-        await ctx.reply(locale.welcome, { reply_markup: { remove_keyboard: true } });
         await showMainMenu(ctx, locale);
       } else {
         const locale = getLocale('en');
