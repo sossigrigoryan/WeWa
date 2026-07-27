@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import env from '../config/env.js';
+import logger from '../common/logger.js';
 
 const client = new OpenAI({
   baseURL: env.GITHUB_MODELS_ENDPOINT,
@@ -22,14 +23,19 @@ export async function chat(messages, options = {}) {
     temperature = 0.7
   } = options;
 
-  const response = await client.chat.completions.create({
-    model,
-    messages,
-    max_tokens: maxTokens,
-    temperature
-  });
+  try {
+    const response = await client.chat.completions.create({
+      model,
+      messages,
+      max_tokens: maxTokens,
+      temperature
+    });
 
-  return response;
+    return response;
+  } catch (error) {
+    logger.error({ err: error }, 'GitHub Models API request failed');
+    throw error;
+  }
 }
 
 export default client;

@@ -1,3 +1,4 @@
+import logger from '../common/logger.js';
 import { createMainMenuKeyboard } from '../bot/keyboards/main-menu.keyboard.js';
 
 /**
@@ -6,8 +7,13 @@ import { createMainMenuKeyboard } from '../bot/keyboards/main-menu.keyboard.js';
  * @param {object} locale
  */
 export async function showMainMenu(ctx, locale) {
-  await ctx.reply(
-    locale.welcome,
-    { reply_markup: createMainMenuKeyboard(locale) }
-  );
+  try {
+    await ctx.reply(
+      locale.welcome,
+      { reply_markup: createMainMenuKeyboard(locale) }
+    );
+  } catch (error) {
+    logger.error({ err: error, userId: ctx.from?.id }, 'Main menu reply failed');
+    throw error;
+  }
 }
