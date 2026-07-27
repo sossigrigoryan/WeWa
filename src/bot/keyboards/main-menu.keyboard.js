@@ -7,10 +7,11 @@ import { Keyboard } from 'grammy';
  */
 export function createMainMenuKeyboard(locale) {
   return new Keyboard()
-    .text(locale.wardrobe)
+    .text(locale.wewa)
     .row()
-    .text(locale.outfits)
+    .text(`👗 ${locale.wardrobe}`)
+    .text(`✨ ${locale.outfits}`)
     .row()
-    .text(locale.settings)
+    .text(`⚙ ${locale.settings}`)
     .resized();
 }

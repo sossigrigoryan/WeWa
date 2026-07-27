@@ -1,3 +1,4 @@
+import logger from '../../common/logger.js';
 import { Keyboard } from 'grammy';
 import { addItem, getWardrobe } from '../../modules/wardrobe/wardrobe.service.js';
 import { getUserLanguage } from '../../services/user-store.service.js';
@@ -101,11 +102,11 @@ export function formatWardrobeItemMessage(item = {}) {
 async function sendWardrobeItem(ctx, item) {
   const photoSource = item.telegramFileId || item.imagePath;
   await safeReplyWithPhoto(ctx, photoSource);
-  await safeReply(ctx, formatWardrobeItemMessage(item), { reply_markup: { remove_keyboard: true } });
+  await safeReply(ctx, formatWardrobeItemMessage(item));
 }
 
 export function registerWardrobeHandler(bot) {
-  bot.hears('Гардероб', async (ctx) => {
+  bot.hears(['👗 Гардероб', 'Гардероб'], async (ctx) => {
     try {
       await handleWardrobeMenu(ctx);
     } catch (error) {
@@ -114,7 +115,7 @@ export function registerWardrobeHandler(bot) {
     }
   });
 
-  bot.hears('Wardrobe', async (ctx) => {
+  bot.hears(['👗 Wardrobe', 'Wardrobe'], async (ctx) => {
     try {
       await handleWardrobeMenu(ctx);
     } catch (error) {
@@ -148,13 +149,15 @@ export function registerWardrobeHandler(bot) {
       const items = await getWardrobe(ctx);
 
       if (!items?.length) {
-        await safeReply(ctx, 'Your wardrobe is empty.', { reply_markup: { remove_keyboard: true } });
+        await safeReply(ctx, 'Your wardrobe is empty.');
+        await handleWardrobeMenu(ctx);
         return;
       }
 
       for (const item of items) {
         await sendWardrobeItem(ctx, item);
       }
+      await handleWardrobeMenu(ctx);
     } catch (error) {
       logger.error({ err: error, userId: ctx.from?.id }, 'View wardrobe failed');
       await safeReply(ctx, 'Unable to view wardrobe right now.');
@@ -168,13 +171,15 @@ export function registerWardrobeHandler(bot) {
       const items = await getWardrobe(ctx);
 
       if (!items?.length) {
-        await safeReply(ctx, 'Your wardrobe is empty.', { reply_markup: { remove_keyboard: true } });
+        await safeReply(ctx, 'Your wardrobe is empty.');
+        await handleWardrobeMenu(ctx);
         return;
       }
 
       for (const item of items) {
         await sendWardrobeItem(ctx, item);
       }
+      await handleWardrobeMenu(ctx);
     } catch (error) {
       logger.error({ err: error, userId: ctx.from?.id }, 'View wardrobe failed');
       await safeReply(ctx, 'Unable to view wardrobe right now.');
@@ -217,12 +222,14 @@ export function registerWardrobeHandler(bot) {
       const userLanguage = await getUserLanguage(ctx.from.id);
       const locale = getLocale(userLanguage || 'en');
       const successMessage = formatItemAddedMessage(result);
-      await safeReply(ctx, successMessage, { reply_markup: { remove_keyboard: true } });
+      await safeReply(ctx, successMessage);
+      await handleWardrobeMenu(ctx);
     } catch {
       try {
         const userLanguage = await getUserLanguage(ctx.from.id);
         const locale = getLocale(userLanguage || 'en');
-        await safeReply(ctx, locale.itemAddedFailure, { reply_markup: { remove_keyboard: true } });
+        await safeReply(ctx, locale.itemAddedFailure);
+        await handleWardrobeMenu(ctx);
       } catch {
         // Ignore follow-up reply failures.
       }

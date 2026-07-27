@@ -2,6 +2,7 @@ export const ru = {
   welcome: 'Добро пожаловать в WeWa!',
   chooseLanguage: 'Пожалуйста, выберите ваш язык.',
   languageSelected: 'Язык выбран.',
+  wewa: 'WeWa',
   wardrobe: 'Гардероб',
   outfits: 'Образы',
   settings: 'Настройки',
