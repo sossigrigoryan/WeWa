@@ -79,22 +79,26 @@ async function downloadPhoto(ctx, fileId) {
     throw new Error('Telegram photo file id is missing.');
   }
 
-  const filePath = await ctx.api.getFile(fileId);
-  const fileUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${filePath.file_path}`;
-  const response = await fetch(fileUrl);
+  try {
+    const filePath = await ctx.api.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${filePath.file_path}`;
+    const response = await fetch(fileUrl);
 
-  if (!response.ok) {
-    throw new Error(`Failed to download Telegram image: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Failed to download Telegram image: ${response.status}`);
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const uploadsDir = path.resolve(process.cwd(), 'uploads');
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const fileName = `${randomUUID()}.jpg`;
+    const tempPath = path.join(uploadsDir, fileName);
+    await fs.writeFile(tempPath, buffer);
+
+    return { buffer, tempPath };
+  } catch {
+    throw new Error('Failed to download the provided photo.');
   }
-
-  const buffer = Buffer.from(await response.arrayBuffer());
-  const uploadsDir = path.resolve(process.cwd(), 'uploads');
-  await fs.mkdir(uploadsDir, { recursive: true });
-  const fileName = `${randomUUID()}.jpg`;
-  const tempPath = path.join(uploadsDir, fileName);
-  await fs.writeFile(tempPath, buffer);
-
-  return { buffer, tempPath };
 }
 
 function toDataUrl(buffer, mimeType = 'image/jpeg') {
@@ -109,52 +113,59 @@ async function runAiAnalysis(imageBuffer, data) {
     };
   }
 
-  const timeoutMs = 20000;
-  const aiRequest = chat([
-    {
-      role: 'user',
-      content: [
-        { type: 'text', text: buildAnalysisPrompt(data) },
-        { type: 'image_url', image_url: { url: toDataUrl(imageBuffer) } }
-      ]
+  try {
+    const timeoutMs = 20000;
+    const aiRequest = chat([
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: buildAnalysisPrompt(data) },
+          { type: 'image_url', image_url: { url: toDataUrl(imageBuffer) } }
+        ]
+      }
+    ], {
+      model: env.GITHUB_MODEL,
+      maxTokens: 500,
+      temperature: 0.2
+    });
+
+    const response = await Promise.race([
+      aiRequest,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('AI analysis timed out.')), timeoutMs);
+      })
+    ]);
+
+    const content = response?.choices?.[0]?.message?.content;
+    const parsed = parseAiResponse(content);
+
+    if (!parsed) {
+      return {
+        aiStatus: AI_ANALYSIS_STATUS.FAILED,
+        aiRawResponse: JSON.stringify({ error: content || 'AI analysis returned no usable payload.' })
+      };
     }
-  ], {
-    model: env.GITHUB_MODEL,
-    maxTokens: 500,
-    temperature: 0.2
-  });
 
-  const response = await Promise.race([
-    aiRequest,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('AI analysis timed out.')), timeoutMs);
-    })
-  ]);
+    const validated = validateAiResponse(parsed);
 
-  const content = response?.choices?.[0]?.message?.content;
-  const parsed = parseAiResponse(content);
-
-  if (!parsed) {
+    return {
+      aiStatus: AI_ANALYSIS_STATUS.COMPLETED,
+      category: validated.category ?? null,
+      type: validated.type ?? null,
+      primaryColor: validated.primaryColor ?? null,
+      secondaryColor: validated.secondaryColor ?? null,
+      material: validated.material ?? null,
+      season: validated.season ?? null,
+      style: validated.style ?? null,
+      description: validated.type ? `${validated.category} / ${validated.type}` : 'Identified via AI',
+      aiRawResponse: JSON.stringify(validated)
+    };
+  } catch (error) {
     return {
       aiStatus: AI_ANALYSIS_STATUS.FAILED,
-      aiRawResponse: JSON.stringify({ error: content || 'AI analysis returned no usable payload.' })
+      aiRawResponse: JSON.stringify({ error: error instanceof Error ? error.message : 'AI analysis failed.' })
     };
   }
-
-  const validated = validateAiResponse(parsed);
-
-  return {
-    aiStatus: AI_ANALYSIS_STATUS.COMPLETED,
-    category: validated.category ?? null,
-    type: validated.type ?? null,
-    primaryColor: validated.primaryColor ?? null,
-    secondaryColor: validated.secondaryColor ?? null,
-    material: validated.material ?? null,
-    season: validated.season ?? null,
-    style: validated.style ?? null,
-    description: validated.type ? `${validated.category} / ${validated.type}` : 'Identified via AI',
-    aiRawResponse: JSON.stringify(validated)
-  };
 }
 
 /**

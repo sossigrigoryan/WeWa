@@ -1,3 +1,4 @@
+import logger from '../common/logger.js';
 import { findByTelegramId, getLanguage, upsertLanguage } from '../repositories/user.repository.js';
 
 /**
@@ -16,7 +17,12 @@ export async function getUser(userId) {
  * @returns {Promise<void>}
  */
 export async function setUserLanguage(userId, language) {
-  await upsertLanguage(userId, language);
+  try {
+    await upsertLanguage(userId, language);
+  } catch (error) {
+    logger.error({ err: error, userId }, 'Failed to persist user language');
+    throw error;
+  }
 }
 
 /**
@@ -25,5 +31,10 @@ export async function setUserLanguage(userId, language) {
  * @returns {Promise<string | null>}
  */
 export async function getUserLanguage(userId) {
-  return getLanguage(userId);
+  try {
+    return await getLanguage(userId);
+  } catch (error) {
+    logger.error({ err: error, userId }, 'Failed to load user language');
+    throw error;
+  }
 }
