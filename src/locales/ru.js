@@ -10,11 +10,25 @@ export const ru = {
   back: 'Назад',
   languageChanged: 'Язык изменён.',
   chooseYourLanguage: 'Выберите ваш язык.',
+
   wardrobeMenu: 'Что вы хотите сделать с гардеробом?',
   addItem: 'Добавить вещь',
   myItems: 'Мои вещи',
   sendPhotoForItem: 'Пожалуйста, отправьте одно фото вещи.',
   itemAddedSuccess: 'Вещь добавлена.',
   itemAddedFailure: 'Не удалось добавить вещь. Попробуйте ещё раз.',
-  myItemsPlaceholder: 'Список вещей будет доступен позже.'
+  myItemsPlaceholder: 'Список вещей будет доступен позже.',
+
+  category: 'Категория',
+  color: 'Цвет',
+  material: 'Материал',
+  style: 'Стиль',
+  unknown: 'Не определено',
+  wardrobeEmpty: 'Ваш гардероб пока пуст.',
+  wardrobeOpenFailure: 'Не удалось открыть гардероб. Попробуйте ещё раз.',
+  addItemStartFailure: 'Не удалось начать добавление вещи. Попробуйте ещё раз.',
+  wardrobeViewFailure: 'Не удалось показать гардероб. Попробуйте ещё раз.',
+  backFailure: 'Не удалось вернуться в меню. Попробуйте ещё раз.',
+  genericError: 'Не удалось обработать запрос. Попробуйте ещё раз.', 
+  rateLimitWarning: 'Вы отправляете сообщения слишком быстро. Пожалуйста, немного подождите.'
 };

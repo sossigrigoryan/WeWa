@@ -1,6 +1,12 @@
 import { getUserLanguage } from '../../services/user-store.service.js';
 import { getLocale } from '../../locales/index.js';
 import { showMainMenu } from '../../services/menu.service.js';
+import { createLanguageKeyboard } from '../keyboards/language.keyboard.js';
+
+async function getUserLocale(ctx) {
+  const userLanguage = await getUserLanguage(ctx.from.id);
+  return getLocale(userLanguage || 'en');
+}
 
 /**
  * Registers menu button handlers.
@@ -9,56 +15,30 @@ import { showMainMenu } from '../../services/menu.service.js';
 export function registerMenuHandler(bot) {
   bot.hears('WeWa', async (ctx) => {
     try {
-      const userId = ctx.from.id;
-      const userLanguage = await getUserLanguage(userId);
-      const locale = getLocale(userLanguage || 'en');
+      const locale = await getUserLocale(ctx);
       await showMainMenu(ctx, locale);
     } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
+      const locale = await getUserLocale(ctx);
+      await ctx.reply(locale.genericError);
     }
   });
 
-  bot.hears('✨ Образы', async (ctx) => {
-    try {
-      const userId = ctx.from.id;
-      const userLanguage = await getUserLanguage(userId);
-      const locale = getLocale(userLanguage || 'en');
-      await ctx.reply(locale.outfits || 'Outfits feature coming soon.');
-    } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
-    }
-  });
+  const settingsButtons = [
+    '⚙ Настройки',
+    '⚙ Settings',
+    '⚙ Կարգավորումներ'
+  ];
 
-  bot.hears('✨ Outfits', async (ctx) => {
+  bot.hears(settingsButtons, async (ctx) => {
     try {
-      const userId = ctx.from.id;
-      const userLanguage = await getUserLanguage(userId);
-      const locale = getLocale(userLanguage || 'en');
-      await ctx.reply(locale.outfits || 'Outfits feature coming soon.');
-    } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
-    }
-  });
+      const locale = await getUserLocale(ctx);
 
-  bot.hears('⚙ Настройки', async (ctx) => {
-    try {
-      const userId = ctx.from.id;
-      const userLanguage = await getUserLanguage(userId);
-      const locale = getLocale(userLanguage || 'en');
-      await ctx.reply(locale.settings || 'Settings feature coming soon.');
+      await ctx.reply(locale.chooseYourLanguage, {
+        reply_markup: createLanguageKeyboard()
+      });
     } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
-    }
-  });
-
-  bot.hears('⚙ Settings', async (ctx) => {
-    try {
-      const userId = ctx.from.id;
-      const userLanguage = await getUserLanguage(userId);
-      const locale = getLocale(userLanguage || 'en');
-      await ctx.reply(locale.settings || 'Settings feature coming soon.');
-    } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
+      const locale = await getUserLocale(ctx);
+      await ctx.reply(locale.genericError);
     }
   });
 }

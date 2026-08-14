@@ -10,7 +10,6 @@ export function createMainMenuKeyboard(locale) {
     .text(locale.wewa)
     .row()
     .text(`👗 ${locale.wardrobe}`)
-    .text(`✨ ${locale.outfits}`)
     .row()
     .text(`⚙ ${locale.settings}`)
     .resized();

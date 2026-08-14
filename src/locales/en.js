@@ -9,5 +9,26 @@ export const en = {
   changeLanguage: 'Change language',
   back: 'Back',
   languageChanged: 'Language has been changed.',
-  chooseYourLanguage: 'Choose your language.'
+  chooseYourLanguage: 'Choose your language.',
+
+  wardrobeMenu: 'What would you like to do with your wardrobe?',
+  addItem: 'Add item',
+  myItems: 'My items',
+  sendPhotoForItem: 'Please send one photo of the item.',
+  itemAddedSuccess: 'Item added.',
+  itemAddedFailure: 'Could not add the item. Please try again.',
+  myItemsPlaceholder: 'Your item list will be available later.',
+
+  category: 'Category',
+  color: 'Color',
+  material: 'Material',
+  style: 'Style',
+  unknown: 'Unknown',
+  wardrobeEmpty: 'Your wardrobe is empty.',
+  wardrobeOpenFailure: 'Unable to open wardrobe. Please try again.',
+  addItemStartFailure: 'Unable to start adding an item. Please try again.',
+  wardrobeViewFailure: 'Unable to view wardrobe. Please try again.',
+  backFailure: 'Unable to return to the menu. Please try again.',
+  genericError: 'Unable to process your request. Please try again.', 
+  rateLimitWarning: 'You are sending messages too quickly. Please wait a moment.'
 };

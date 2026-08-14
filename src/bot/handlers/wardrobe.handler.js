@@ -16,22 +16,15 @@ async function safeReply(ctx, message, options = {}) {
   }
 }
 
-async function safeReplyWithPhoto(ctx, photoSource, options = {}) {
-  try {
-    await ctx.replyWithPhoto(photoSource, options);
-  } catch {
-    // Ignore photo reply failures so the interaction stays resilient.
-  }
-}
-
-function formatDisplayValue(value) {
+function formatDisplayValue(value, locale) {
   if (typeof value !== 'string') {
-    return 'Unknown';
+    return locale.unknown;
   }
 
   const trimmedValue = value.trim();
-  if (!trimmedValue) {
-    return 'Unknown';
+
+  if (!trimmedValue || trimmedValue.toLowerCase() === 'unknown') {
+    return locale.unknown;
   }
 
   const categoryMap = {
@@ -45,6 +38,7 @@ function formatDisplayValue(value) {
   };
 
   const normalizedValue = trimmedValue.toUpperCase();
+
   if (categoryMap[normalizedValue]) {
     return categoryMap[normalizedValue];
   }
@@ -52,19 +46,19 @@ function formatDisplayValue(value) {
   return trimmedValue.charAt(0).toUpperCase() + trimmedValue.slice(1);
 }
 
-export function formatItemAddedMessage(result = {}) {
-  const category = formatDisplayValue(result.category);
-  const primaryColor = formatDisplayValue(result.primaryColor);
-  const material = formatDisplayValue(result.material);
-  const style = formatDisplayValue(result.style);
+export function formatItemAddedMessage(result = {}, locale = getLocale('en')) {
+  const category = formatDisplayValue(result.category, locale);
+  const primaryColor = formatDisplayValue(result.primaryColor, locale);
+  const material = formatDisplayValue(result.material, locale);
+  const style = formatDisplayValue(result.style, locale);
 
   return [
-    '✅ Item added!',
+    `✅ ${locale.itemAddedSuccess}`,
     '',
-    `👗 Category: ${category}`,
-    `🎨 Color: ${primaryColor}`,
-    `🧵 Material: ${material}`,
-    `🌸 Style: ${style}`
+    `👗 ${locale.category}: ${category}`,
+    `🎨 ${locale.color}: ${primaryColor}`,
+    `🧵 ${locale.material}: ${material}`,
+    `🌸 ${locale.style}: ${style}`
   ].join('\n');
 }
 
@@ -78,25 +72,38 @@ function createWardrobeKeyboard(locale) {
     .resized();
 }
 
-async function handleWardrobeMenu(ctx) {
+async function getUserLocale(ctx) {
   const userLanguage = await getUserLanguage(ctx.from.id);
-  const locale = getLocale(userLanguage || 'en');
-  await safeReply(ctx, locale.wardrobeMenu, { reply_markup: createWardrobeKeyboard(locale) });
+  return getLocale(userLanguage || 'en');
+}
+
+async function handleWardrobeMenu(ctx) {
+  const locale = await getUserLocale(ctx);
+
+  await safeReply(ctx, locale.wardrobeMenu, {
+    reply_markup: createWardrobeKeyboard(locale)
+  });
 }
 
 async function handleAddItem(ctx) {
-  const userLanguage = await getUserLanguage(ctx.from.id);
-  const locale = getLocale(userLanguage || 'en');
+  const locale = await getUserLocale(ctx);
+
   waitingForPhoto.set(ctx.from.id, { awaitingPhoto: true });
-  await safeReply(ctx, locale.sendPhotoForItem, { reply_markup: { remove_keyboard: true } });
+
+  await safeReply(ctx, locale.sendPhotoForItem, {
+    reply_markup: { remove_keyboard: true }
+  });
 }
 
-export function formatWardrobeItemMessage(item = {}) {
+export function formatWardrobeItemMessage(
+  item = {},
+  locale = getLocale('en')
+) {
   return [
-    `👗 ${formatDisplayValue(item.category)}`,
-    `🎨 ${formatDisplayValue(item.primaryColor)}`,
-    `🧵 ${formatDisplayValue(item.material)}`,
-    `🌸 ${formatDisplayValue(item.style)}`
+    `👗 ${locale.category}: ${formatDisplayValue(item.category, locale)}`,
+    `🎨 ${locale.color}: ${formatDisplayValue(item.primaryColor, locale)}`,
+    `🧵 ${locale.material}: ${formatDisplayValue(item.material, locale)}`,
+    `🌸 ${locale.style}: ${formatDisplayValue(item.style, locale)}`
   ].join('\n');
 }
 
@@ -108,12 +115,10 @@ function localFileExists(filePath) {
   }
 }
 
-export async function sendWardrobeItem(ctx, item) {
-  const caption = formatWardrobeItemMessage(item);
+export async function sendWardrobeItem(ctx, item, locale = getLocale('en')) {
+  const caption = formatWardrobeItemMessage(item, locale);
 
-  // 1) Try the cached Telegram file_id first (fastest, no upload needed).
-  //    Note: file_id values are only valid for the bot that received them,
-  //    so items migrated from a different bot will fail here.
+  // 1) Try the cached Telegram file_id first.
   if (item.telegramFileId) {
     try {
       await ctx.replyWithPhoto(item.telegramFileId, { caption });
@@ -126,14 +131,16 @@ export async function sendWardrobeItem(ctx, item) {
     }
   }
 
-  // 2) Fall back to the locally saved copy of the photo (downloaded when the
-  //    item was added). Local files must be wrapped in InputFile.
+  // 2) Fall back to the locally saved image.
   if (localFileExists(item.imagePath)) {
     try {
       await ctx.replyWithPhoto(new InputFile(item.imagePath), { caption });
       return;
     } catch (error) {
-      logger.warn({ err: error, itemId: item.id }, 'Failed to send local image file');
+      logger.warn(
+        { err: error, itemId: item.id },
+        'Failed to send local image file'
+      );
     }
   }
 
@@ -141,112 +148,112 @@ export async function sendWardrobeItem(ctx, item) {
   await safeReply(ctx, caption);
 }
 
+async function handleViewWardrobe(ctx) {
+  try {
+    const locale = await getUserLocale(ctx);
+    const items = await getWardrobe(ctx);
+
+    if (!items?.length) {
+      await safeReply(ctx, locale.wardrobeEmpty);
+      await handleWardrobeMenu(ctx);
+      return;
+    }
+
+    for (const item of items) {
+      await sendWardrobeItem(ctx, item, locale);
+    }
+
+    await handleWardrobeMenu(ctx);
+  } catch (error) {
+    logger.error(
+      { err: error, userId: ctx.from?.id },
+      'View wardrobe failed'
+    );
+
+    const locale = await getUserLocale(ctx);
+    await safeReply(ctx, locale.wardrobeViewFailure);
+  }
+}
+
+async function handleBack(ctx) {
+  try {
+    const locale = await getUserLocale(ctx);
+    await showMainMenu(ctx, locale);
+  } catch (error) {
+    logger.error(
+      { err: error, userId: ctx.from?.id },
+      'Back navigation failed'
+    );
+
+    const locale = await getUserLocale(ctx);
+    await safeReply(ctx, locale.backFailure);
+  }
+}
+
 export function registerWardrobeHandler(bot) {
-  bot.hears(['👗 Гардероб', 'Гардероб'], async (ctx) => {
+  const wardrobeButtons = [
+    '👗 Гардероб',
+    'Гардероб',
+    '👗 Wardrobe',
+    'Wardrobe',
+    '👗 Զգեստապահարան',
+    'Զգեստապահարան'
+  ];
+
+  bot.hears(wardrobeButtons, async (ctx) => {
     try {
       await handleWardrobeMenu(ctx);
     } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Wardrobe menu failed');
-      await safeReply(ctx, 'Unable to open wardrobe right now.');
+      logger.error(
+        { err: error, userId: ctx.from?.id },
+        'Wardrobe menu failed'
+      );
+
+      const locale = await getUserLocale(ctx);
+      await safeReply(ctx, locale.wardrobeOpenFailure);
     }
   });
 
-  bot.hears(['👗 Wardrobe', 'Wardrobe'], async (ctx) => {
-    try {
-      await handleWardrobeMenu(ctx);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Wardrobe menu failed');
-      await safeReply(ctx, 'Unable to open wardrobe right now.');
-    }
-  });
+  const addItemButtons = [
+    'Добавить вещь',
+    'Add item',
+    'Ավելացնել հագուստ'
+  ];
 
-  bot.hears('Добавить вещь', async (ctx) => {
+  bot.hears(addItemButtons, async (ctx) => {
     try {
       await handleAddItem(ctx);
     } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Add item prompt failed');
-      await safeReply(ctx, 'Unable to start adding an item right now.');
+      logger.error(
+        { err: error, userId: ctx.from?.id },
+        'Add item prompt failed'
+      );
+
+      const locale = await getUserLocale(ctx);
+      await safeReply(ctx, locale.addItemStartFailure);
     }
   });
 
-  bot.hears('Add item', async (ctx) => {
-    try {
-      await handleAddItem(ctx);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Add item prompt failed');
-      await safeReply(ctx, 'Unable to start adding an item right now.');
-    }
-  });
+  const myItemsButtons = [
+    'Мои вещи',
+    'My items',
+    'Իմ հագուստը'
+  ];
 
-  bot.hears('Мои вещи', async (ctx) => {
-    try {
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      const items = await getWardrobe(ctx);
+  bot.hears(myItemsButtons, handleViewWardrobe);
 
-      if (!items?.length) {
-        await safeReply(ctx, 'Your wardrobe is empty.');
-        await handleWardrobeMenu(ctx);
-        return;
-      }
+  const backButtons = [
+    'Назад',
+    'Back',
+    'Հետ'
+  ];
 
-      for (const item of items) {
-        await sendWardrobeItem(ctx, item);
-      }
-      await handleWardrobeMenu(ctx);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'View wardrobe failed');
-      await safeReply(ctx, 'Unable to view wardrobe right now.');
-    }
-  });
-
-  bot.hears('My items', async (ctx) => {
-    try {
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      const items = await getWardrobe(ctx);
-
-      if (!items?.length) {
-        await safeReply(ctx, 'Your wardrobe is empty.');
-        await handleWardrobeMenu(ctx);
-        return;
-      }
-
-      for (const item of items) {
-        await sendWardrobeItem(ctx, item);
-      }
-      await handleWardrobeMenu(ctx);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'View wardrobe failed');
-      await safeReply(ctx, 'Unable to view wardrobe right now.');
-    }
-  });
-
-  bot.hears('Назад', async (ctx) => {
-    try {
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      await showMainMenu(ctx, locale);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Back navigation failed');
-      await safeReply(ctx, 'Unable to return to the menu right now.');
-    }
-  });
-
-  bot.hears('Back', async (ctx) => {
-    try {
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      await showMainMenu(ctx, locale);
-    } catch (error) {
-      logger.error({ err: error, userId: ctx.from?.id }, 'Back navigation failed');
-      await safeReply(ctx, 'Unable to return to the menu right now.');
-    }
-  });
+  bot.hears(backButtons, handleBack);
 
   bot.on('message:photo', async (ctx) => {
     try {
       const waiting = waitingForPhoto.get(ctx.from.id);
+
       if (!waiting?.awaitingPhoto) {
         waitingForPhoto.set(ctx.from.id, { awaitingPhoto: true });
         return;
@@ -255,15 +262,16 @@ export function registerWardrobeHandler(bot) {
       waitingForPhoto.delete(ctx.from.id);
 
       const result = await addItem(ctx, {});
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      const successMessage = formatItemAddedMessage(result);
+      const locale = await getUserLocale(ctx);
+
+      const successMessage = formatItemAddedMessage(result, locale);
+
       await safeReply(ctx, successMessage);
       await handleWardrobeMenu(ctx);
     } catch {
       try {
-        const userLanguage = await getUserLanguage(ctx.from.id);
-        const locale = getLocale(userLanguage || 'en');
+        const locale = await getUserLocale(ctx);
+
         await safeReply(ctx, locale.itemAddedFailure);
         await handleWardrobeMenu(ctx);
       } catch {
@@ -275,13 +283,16 @@ export function registerWardrobeHandler(bot) {
   bot.on('message:text', async (ctx) => {
     try {
       const waiting = waitingForPhoto.get(ctx.from.id);
+
       if (!waiting?.awaitingPhoto) {
         return;
       }
 
-      const userLanguage = await getUserLanguage(ctx.from.id);
-      const locale = getLocale(userLanguage || 'en');
-      await safeReply(ctx, locale.sendPhotoForItem, { reply_markup: { remove_keyboard: true } });
+      const locale = await getUserLocale(ctx);
+
+      await safeReply(ctx, locale.sendPhotoForItem, {
+        reply_markup: { remove_keyboard: true }
+      });
     } catch {
       // Ignore text prompt failures.
     }

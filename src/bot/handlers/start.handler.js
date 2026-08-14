@@ -24,7 +24,8 @@ export function registerStartHandler(bot) {
         );
       }
     } catch (error) {
-      await ctx.reply('Unable to process your request right now.');
+      const locale = getLocale('en');
+      await ctx.reply(locale.genericError);
     }
   });
 }
