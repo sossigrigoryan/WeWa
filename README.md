@@ -1,178 +1,275 @@
 # WeWa
 
-# AI Sustainable Wardrobe Assistant
+## AI Sustainable Wardrobe Assistant
 
 > **Fall in love with your wardrobe again.**
 
----
+**WeWa** is an AI-powered Telegram wardrobe assistant designed to help people organize, understand, and make better use of the clothes they already own.
 
-# О проекте
+Instead of encouraging constant shopping, WeWa starts with a different question:
 
-**WeWa** — это AI-powered Telegram-бот, который помогает пользователям организовать свой гардероб, создать его цифровую копию и максимально эффективно использовать уже имеющуюся одежду.
+> **What can you do with the wardrobe you already have?**
 
-В отличие от большинства fashion-приложений, WeWa не стимулирует новые покупки. Основная идея проекта — помочь человеку заново открыть ценность собственного гардероба, экономить время при выборе одежды и сделать потребление более осознанным и экологичным.
-
----
-
-# Миссия проекта
-
-Помочь людям по-новому взглянуть на собственный гардероб, используя возможности искусственного интеллекта для более удобного, разумного и экологичного подхода к выбору одежды.
+The project combines AI-powered image analysis, digital wardrobe management, personalization, and conscious-consumption principles in a practical everyday assistant.
 
 ---
 
-# Проблема
+## Mission
 
-Многие люди регулярно сталкиваются с ситуацией:
+To help people rediscover the value of their existing wardrobe and use artificial intelligence to make wardrobe management easier, more personal, and more sustainable.
 
-> **«Шкаф полный, а надеть нечего.»**
+Two principles guide the product:
 
-Основные причины:
+> **AI suggests. The user decides.**
 
-- забываются вещи, которые уже есть;
-- постоянно используются одни и те же комплекты;
-- сложно быстро подобрать подходящую одежду;
-- совершаются повторные покупки похожих вещей;
-- ежедневно тратится время на выбор одежды.
+> **Use what you already own before buying more.**
 
 ---
 
-# Решение
+## The Problem
 
-WeWa позволяет пользователю:
+Many people know the feeling:
 
-- создать цифровой гардероб;
-- добавлять вещи по фотографии;
-- автоматически анализировать изображения с помощью AI;
-- определять характеристики одежды (категория, цвет, материал, стиль и др.);
-- сохранять структурированную информацию о каждой вещи;
-- быстро просматривать свой гардероб прямо в Telegram.
+> **“My wardrobe is full, but I have nothing to wear.”**
 
----
+The problem is often not simply a lack of clothes. People may:
 
-# Основные возможности MVP
+- forget what they already own;
+- repeatedly wear only a small part of their wardrobe;
+- struggle to make use of individual items;
+- buy items similar to things they already have;
+- spend unnecessary time deciding what to wear;
+- keep difficult or sentimental items without knowing what to do with them.
 
-На текущем этапе реализованы:
-
-- авторизация пользователя через Telegram;
-- мультиязычный интерфейс (русский, английский, армянский);
-- загрузка фотографий одежды;
-- AI-анализ изображений;
-- автоматическое определение характеристик вещей;
-- сохранение информации в цифровом гардеробе;
-- просмотр сохранённых вещей;
-- централизованная обработка ошибок;
-- механизм Rate Limiting для повышения устойчивости работы.
+A wardrobe is personal. It reflects a person's lifestyle, work, habits, preferences, memories, and history. WeWa is designed around that reality rather than around replacing an existing wardrobe with a generic trend-based one.
 
 ---
 
-# Архитектура проекта
+## The Solution
 
-Проект построен на основе модульной архитектуры.
+WeWa creates a digital representation of the user's real wardrobe.
 
-```
+In the current MVP, a user can send a photo of a clothing item to the Telegram bot. AI analyzes the image, extracts structured characteristics, and stores the item in the user's digital wardrobe.
+
+The long-term direction is to make the wardrobe itself more useful: easier to manage, explore, combine, and understand.
+
+---
+
+## Current MVP
+
+The following functionality is implemented:
+
+- Telegram-based user interaction;
+- user identification through Telegram ID;
+- multilingual interface in **English, Russian, and Armenian**;
+- persistent language preference;
+- clothing photo upload;
+- AI-powered image analysis;
+- automatic identification of clothing characteristics including category, color, material, and style;
+- structured storage of wardrobe items;
+- digital wardrobe browsing;
+- graceful fallback when AI analysis fails — the item can still be saved;
+- centralized error handling and logging;
+- rate limiting;
+- automated tests for key application behavior.
+
+The MVP intentionally focuses on a small, stable core rather than attempting to implement the complete product vision at once.
+
+---
+
+## How AI Analysis Works
+
+```text
+User sends clothing photo
+          |
+          v
 Telegram Bot
-      │
-      ▼
-Bot Handlers
-      │
-      ▼
-Business Logic
-      │
- ┌────┴─────────┐
- ▼              ▼
-AI Services   Database Layer
+          |
+          v
+Bot Handler
+          |
+          v
+Wardrobe Service
+       /       \
+      v         v
+ AI Client    Prisma
+      |         |
+      v         v
+Gemini API   SQLite
+      |
+      v
+Structured clothing attributes
 ```
 
-Такой подход позволяет:
+The AI integration is isolated behind a dedicated client, separating external AI communication from wardrobe business logic. This makes the application easier to maintain and allows the AI model or compatible provider to be changed without redesigning the entire system.
 
-- разделить ответственность между компонентами;
-- упростить сопровождение проекта;
-- обеспечить масштабируемость;
-- повторно использовать бизнес-логику независимо от Telegram API.
+AI responses are requested in structured JSON format and validated before being stored.
 
 ---
 
-# Используемые технологии
+## Technology Stack
 
-- JavaScript (ES Modules)
-- Node.js
-- Grammy
-- GitHub Models
-- SQLite
-- dotenv
-- Git
-- GitHub
+- **JavaScript** — ES Modules
+- **Node.js**
+- **grammY** — Telegram Bot framework
+- **Google Gemini API** — multimodal clothing analysis
+- **OpenAI JavaScript SDK** — OpenAI-compatible Gemini API client
+- **Prisma ORM**
+- **SQLite**
+- **Zod** — configuration and validation
+- **Pino** — application logging
+- **Vitest** — automated testing
+- **dotenv**
+- **Git / GitHub**
 
 ---
 
-# Структура проекта
+## Project Structure
 
-```
+```text
 src/
-
 ├── bot/
 │   ├── handlers/
 │   └── keyboards/
-│
 ├── common/
 ├── config/
+├── lib/
 ├── locales/
 ├── modules/
+├── repositories/
 ├── services/
 └── utils/
+
+prisma/
+tests/
+uploads/
+```
+
+The project follows a modular structure that separates Telegram interaction, business logic, data access, AI integration, configuration, and localization.
+
+---
+
+## Product Principles
+
+- **Existing wardrobe first.** Help users get more value from clothes they already own.
+- **AI suggests; the user decides.** AI-generated information should remain subject to user correction and control.
+- **Personal context matters.** A useful wardrobe assistant should reflect the user's real life rather than generic fashion rules.
+- **Low-friction interaction.** Managing a wardrobe should require as little unnecessary manual work as possible.
+- **Graceful failure.** A temporary AI failure should not prevent basic wardrobe functionality.
+- **Modular architecture.** External services should be replaceable without rewriting the whole application.
+- **Conscious consumption.** The product is designed to encourage better use of existing clothing rather than unnecessary consumption.
+
+---
+
+## Roadmap
+
+Future development directions include:
+
+- advanced wardrobe management and user-editable item attributes;
+- richer AI-powered wardrobe assistance and personalization;
+- outfit planning and wardrobe-based recommendations;
+- travel-oriented wardrobe assistance;
+- flexible item import and wardrobe organization;
+- wardrobe-based shopping assistance;
+- personal wardrobe insights;
+- sustainable reuse and circular-wardrobe functionality;
+- web and mobile experiences.
+
+Detailed product concepts and feature specifications are maintained privately.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+To run the project locally you need:
+
+- Node.js;
+- npm;
+- a Telegram bot token created through BotFather;
+- a Gemini API key.
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone <repository-url>
+cd WeWa
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a local `.env` file based on `.env.example`.
+
+Example:
+
+```env
+NODE_ENV=development
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+DATABASE_URL="file:./dev.db"
+
+AI_API_KEY=your_gemini_api_key_here
+AI_MODEL=gemini-3.6-flash
+AI_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/openai/
+
+ADMIN_TELEGRAM_ID=
+LOG_LEVEL=info
+```
+
+Never commit the real `.env` file or API keys to the repository.
+
+Prepare the Prisma database as required by the project configuration, then start the development server:
+
+```bash
+npm run dev
 ```
 
 ---
 
-# Основные принципы проекта
+## Tests
 
-При разработке WeWa соблюдаются следующие принципы:
+Run the automated test suite with:
 
-- AI никогда не придумывает одежду, которой нет у пользователя.
-- Анализ выполняется только на основе загруженных изображений.
-- Бизнес-логика полностью отделена от Telegram-интерфейса.
-- Все пользовательские сообщения поддерживают несколько языков.
-- Особое внимание уделяется обработке ошибок и устойчивости работы приложения.
-- Архитектура изначально проектируется с возможностью дальнейшего масштабирования.
+```bash
+npm test
+```
 
----
-
-# Roadmap
-
-В следующих версиях планируется реализовать:
-
-- AI-подбор образов на основе существующего гардероба;
-- рекомендации с учётом сезона, погоды и повода;
-- поиск одежды по категориям, цветам и стилям;
-- календарь образов;
-- Web-приложение;
-- мобильное приложение.
+The test suite covers key application behavior including wardrobe handling, error handling, and rate limiting.
 
 ---
 
-# Статус проекта
+## Current Status
 
-**Текущая стадия:** MVP
+**Stage: Working Portfolio MVP**
 
-## Реализовано
+### Implemented
 
-- ✅ AI-анализ одежды
-- ✅ Цифровой гардероб
-- ✅ Мультиязычный интерфейс
-- ✅ Модульная архитектура
-- ✅ Централизованная обработка ошибок
-- ✅ Rate Limiting
-
-## Планируется
-
-- 🚧 AI-подбор образов
-- 🚧 Расширенное управление гардеробом
-- 🚧 Персонализированные рекомендации с учётом погоды и сезона
+- ✅ Digital wardrobe
+- ✅ Clothing photo upload
+- ✅ Gemini-powered image analysis
+- ✅ Structured AI output
+- ✅ English / Russian / Armenian interface
+- ✅ Persistent user language
+- ✅ Modular application architecture
+- ✅ Database persistence
+- ✅ Error handling and logging
+- ✅ Rate limiting
+- ✅ Automated tests
 
 ---
 
-# Назначение проекта
+## About the Project
 
-Проект разработан как учебный проект для портфолио с целью продемонстрировать навыки современной backend-разработки, построения модульной архитектуры, интеграции AI-моделей и применения лучших практик разработки программного обеспечения.
+WeWa is an independently developed MVP and portfolio project exploring how AI can support practical wardrobe management and more conscious clothing consumption.
 
-В дальнейшем проект планируется развивать как полноценный AI-помощник для управления гардеробом.
+It began as a development project, but its product direction is broader than a technical demonstration. The long-term vision is a personal wardrobe assistant that understands what a user already owns and helps them make better use of it.
+
+---
+
+> **Fall in love with your wardrobe again.**
