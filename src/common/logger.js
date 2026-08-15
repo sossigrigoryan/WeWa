@@ -11,7 +11,7 @@ const logger = pino({
       'botToken',
       'TELEGRAM_BOT_TOKEN',
       'apiKey',
-      'GITHUB_TOKEN',
+      'AI_API_KEY',
       'authorization',
       '*.token',
       '*.botToken',

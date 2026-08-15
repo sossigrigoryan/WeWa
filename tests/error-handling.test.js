@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleLanguageSelection } from '../src/services/language.service.js';
 import { addItem } from '../src/modules/wardrobe/wardrobe.service.js';
-import { chat } from '../src/lib/github-models.client.js';
+import { chat } from '../src/lib/ai.client.js';
 
-vi.mock('../src/lib/github-models.client.js', () => ({
+vi.mock('../src/lib/ai.client.js', () => ({
   chat: vi.fn()
 }));
 

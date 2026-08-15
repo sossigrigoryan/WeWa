@@ -4,7 +4,7 @@ import path from 'path';
 import env from '../../config/env.js';
 import logger from '../../common/logger.js';
 import { AI_ANALYSIS_STATUS } from '../../common/constants.js';
-import { chat } from '../../lib/github-models.client.js';
+import { chat } from '../../lib/ai.client.js';
 import {
   checkItemOwnership,
   createDraftItem,
@@ -106,10 +106,12 @@ function toDataUrl(buffer, mimeType = 'image/jpeg') {
 }
 
 async function runAiAnalysis(imageBuffer, data) {
-  if (!env.GITHUB_TOKEN) {
+  if (!env.AI_API_KEY) {
     return {
       aiStatus: AI_ANALYSIS_STATUS.FAILED,
-      aiRawResponse: JSON.stringify({ error: 'AI analysis skipped because GITHUB_TOKEN is not configured.' })
+      aiRawResponse: JSON.stringify({
+        error: 'AI analysis skipped because AI_API_KEY is not configured.'
+      })
     };
   }
 
@@ -124,9 +126,10 @@ async function runAiAnalysis(imageBuffer, data) {
         ]
       }
     ], {
-      model: env.GITHUB_MODEL,
-      maxTokens: 500,
-      temperature: 0.2
+      model: env.AI_MODEL,
+      maxTokens: 1500,
+      temperature: 0.2,
+      responseFormat: { type: 'json_object' }
     });
 
     const response = await Promise.race([

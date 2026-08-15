@@ -3,13 +3,15 @@ import env from '../config/env.js';
 import logger from '../common/logger.js';
 
 const client = new OpenAI({
-  baseURL: env.GITHUB_MODELS_ENDPOINT,
-  apiKey: env.GITHUB_TOKEN
+  baseURL: env.AI_ENDPOINT,
+  apiKey: env.AI_API_KEY
 });
 
 /**
- * Generic chat method for GitHub Models.
- * @param {Array<{role: string, content: string}>} messages
+ * Generic AI chat method.
+ * The rest of the application does not depend on a specific AI provider.
+ *
+ * @param {Array<object>} messages
  * @param {object} [options]
  * @param {string} [options.model]
  * @param {number} [options.maxTokens]
@@ -18,22 +20,24 @@ const client = new OpenAI({
  */
 export async function chat(messages, options = {}) {
   const {
-    model = env.GITHUB_MODEL,
+    model = env.AI_MODEL,
     maxTokens = 1000,
-    temperature = 0.7
+    temperature = 0.7,
+    responseFormat
   } = options;
 
   try {
     const response = await client.chat.completions.create({
-      model,
-      messages,
-      max_tokens: maxTokens,
-      temperature
+        model,
+        messages,
+        max_tokens: maxTokens,
+        temperature,
+        ...(responseFormat && { response_format: responseFormat })
     });
 
     return response;
   } catch (error) {
-    logger.error({ err: error }, 'GitHub Models API request failed');
+    logger.error({ err: error }, 'AI API request failed');
     throw error;
   }
 }
