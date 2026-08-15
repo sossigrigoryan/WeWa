@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { formatItemAddedMessage, formatWardrobeItemMessage, sendWardrobeItem } from '../src/bot/handlers/wardrobe.handler.js';
+import {
+  formatItemAddedMessage,
+  formatWardrobeItemMessage,
+  sendWardrobeItem
+} from '../src/bot/handlers/wardrobe.handler.js';
 
 describe('formatItemAddedMessage', () => {
-  it('formats the Telegram success message in the requested English layout', () => {
+  it('formats the Telegram success message in the English layout', () => {
     expect(
       formatItemAddedMessage({
         category: 'DRESSES',
@@ -10,20 +14,36 @@ describe('formatItemAddedMessage', () => {
         material: 'Cotton',
         style: 'Casual'
       })
-    ).toBe(`✅ Item added!\n\n👗 Category: Dress\n🎨 Color: Blue\n🧵 Material: Cotton\n🌸 Style: Casual`);
+    ).toBe(
+      `✅ Item added.\n\n👗 Category: Dress\n🎨 Color: Blue\n🧵 Material: Cotton\n🌸 Style: Casual`
+    );
   });
 
   it('uses Unknown when a field is missing or null', () => {
-    expect(formatItemAddedMessage({ category: null, primaryColor: null, material: null, style: null })).toBe(
-      `✅ Item added!\n\n👗 Category: Unknown\n🎨 Color: Unknown\n🧵 Material: Unknown\n🌸 Style: Unknown`
+    expect(
+      formatItemAddedMessage({
+        category: null,
+        primaryColor: null,
+        material: null,
+        style: null
+      })
+    ).toBe(
+      `✅ Item added.\n\n👗 Category: Unknown\n🎨 Color: Unknown\n🧵 Material: Unknown\n🌸 Style: Unknown`
     );
   });
 });
 
 describe('formatWardrobeItemMessage', () => {
   it('formats wardrobe metadata for the visible item message', () => {
-    expect(formatWardrobeItemMessage({ category: 'DRESSES', primaryColor: 'red', material: 'silk', style: 'traditional' })).toBe(
-      `👗 Dress\n🎨 Red\n🧵 Silk\n🌸 Traditional`
+    expect(
+      formatWardrobeItemMessage({
+        category: 'DRESSES',
+        primaryColor: 'red',
+        material: 'silk',
+        style: 'traditional'
+      })
+    ).toBe(
+      `👗 Category: Dress\n🎨 Color: Red\n🧵 Material: Silk\n🌸 Style: Traditional`
     );
   });
 });
@@ -34,7 +54,7 @@ describe('sendWardrobeItem', () => {
       replyWithPhoto: vi.fn().mockResolvedValue(),
       reply: vi.fn()
     };
-    
+
     const item = {
       telegramFileId: 'AgACagIAAxkBAAI...',
       category: 'DRESSES',
@@ -47,8 +67,9 @@ describe('sendWardrobeItem', () => {
 
     expect(mockCtx.replyWithPhoto).toHaveBeenCalledWith(
       'AgACagIAAxkBAAI...',
-      { caption: expect.stringContaining('👗 Dress') }
+      { caption: expect.stringContaining('👗 Category: Dress') }
     );
+
     expect(mockCtx.reply).not.toHaveBeenCalled();
   });
 
@@ -57,7 +78,7 @@ describe('sendWardrobeItem', () => {
       replyWithPhoto: vi.fn().mockRejectedValue(new Error('Photo failed')),
       reply: vi.fn().mockResolvedValue()
     };
-    
+
     const item = {
       telegramFileId: 'AgACagIAAxkBAAI...',
       category: 'DRESSES',
@@ -69,8 +90,9 @@ describe('sendWardrobeItem', () => {
     await sendWardrobeItem(mockCtx, item);
 
     expect(mockCtx.replyWithPhoto).toHaveBeenCalled();
+
     expect(mockCtx.reply).toHaveBeenCalledWith(
-      expect.stringContaining('👗 Dress'),
+      expect.stringContaining('👗 Category: Dress'),
       expect.any(Object)
     );
   });
